@@ -10,15 +10,16 @@ router.use((request, response, next) => {
     console.log("Request Body" + request.body);
     console.log("Request Headers" + request.headers);
     console.log("Request Headers contentType" + request.headers['content-type']);
-    if (Object.keys(request.query).length > 0 || (Object.keys(request.body || {}).length > 0)) { // || request.headers['content-type'] !== 'application/json' Check for contentType
+    if (Object.keys(request.query).length > 0 || (Object.keys(request.body || {}).length > 0) 
+        || (request.header['content-length'] != null && request.headers['content-length'].length > 0)) {
         console.log("Request contains Payload"); 
         return response.status(400).header('Cache-Control', 'no-cache').send();
     }
 
   
     next();
-  });
+});
   
-  router.get('/', checkHealth);
+router.get('/', checkHealth);
   
-  module.exports = router;
+module.exports = router;
