@@ -4,9 +4,11 @@ const checkHealth = async (request, response) => {
     const isDatabaseConnected = await healthService.checkDatabaseConnection();
     console.log("is DB connected: " + isDatabaseConnected);
     if(isDatabaseConnected) {
-        return response.status(200).set('Cache-Control', 'no-cache').send();
+        console.log("Database connection success");
+        return response.status(200).header('Cache-Control', 'no-cache').send();
     } else {
-        return response.status(503).set('Cache-Control', 'no-cache').send();
+        console.log("Database connection unsuccessful");
+        return response.status(503).header('Cache-Control', 'no-cache').send();
     }
 }
 
