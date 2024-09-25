@@ -6,7 +6,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use('/healthz', healthzRoute);
 app.use('/', (req, res) => {
-    res.status(404).send();
+    res.status(404).header('Cache-Control', 'no-cache').header('Pragma', 'no-cache').send();
 });
 
 app.listen(PORT, () => {
