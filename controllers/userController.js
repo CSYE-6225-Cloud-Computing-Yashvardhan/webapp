@@ -5,14 +5,14 @@ const headers = {
     'X-Content-Type-Options': 'nosniff',
 };
 const createUser = async (request, response) => {
-
+    console.log("Request: " + request);
     const userData = {
-        first_name: request.first_name,
-        last_name: request.last_name,
-        email:request.email,
-        password: request.password
+        first_name: request.body.first_name,
+        last_name: request.body.last_name,
+        email:request.body.email,
+        password: request.body.password
     };
-
+    console.log("userData: " + userData);
     try {
         const newUser = await userService.createUser(userData);
         if (newUser instanceof Error) {
@@ -34,4 +34,8 @@ const createUser = async (request, response) => {
         console.log("User Controller: Error");
     }
 
-} 
+};
+
+module.exports = {
+    createUser,
+};

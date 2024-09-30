@@ -27,7 +27,7 @@ router.use((request, response, next) => {
         return response.status(400).header(headers).send();
     }
 
-  
+
     next();
 });
   

@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const database = require('../configs/sequelizeConfig');
 const bcrypt = require('bcrypt');
 
-const User = database.define('User', {
+const User = database.sequelize.define('User', {
     id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
@@ -77,6 +77,6 @@ const User = database.define('User', {
     timestamps: false
 });
 
-sequelize.sync();
+database.sequelize.sync();
 
 module.exports = User;
