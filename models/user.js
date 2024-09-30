@@ -2,7 +2,7 @@ const { DataTypes } = require('sequelize');
 const database = require('../configs/sequelizeConfig');
 const bcrypt = require('bcrypt');
 
-const User = sequelize.define('User', {
+const User = database.define('User', {
     id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
@@ -10,7 +10,7 @@ const User = sequelize.define('User', {
         allowNull: false,
         readOnly: true,
     },
-    emailAddress: {
+    email: {
         type: DataTypes.STRING,
         unique: true,
         allowNull: false,
@@ -32,7 +32,7 @@ const User = sequelize.define('User', {
             }
         },
     },
-    firstName: {
+    first_name: {
         type: DataTypes.STRING,
         allowNull: false,
         validate:{
@@ -41,7 +41,7 @@ const User = sequelize.define('User', {
             }
         },
     },
-    lastName: {
+    last_name: {
         type: DataTypes.STRING,
         allowNull: false,
         validate:{
