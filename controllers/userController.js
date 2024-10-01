@@ -1,11 +1,19 @@
+const { request, response } = require("express");
 const userService = require("../services/userService");
+const dataValidator = require("../utils/dataValidator");
 const headers = {
     'Cache-Control': 'no-cache, no-store, must-revalidate',
     'Pragma': 'no-cache',
     'X-Content-Type-Options': 'nosniff',
 };
 const createUser = async (request, response) => {
-    console.log("Request: " + request);
+    console.log("Request: " + request.toString());
+    const requestValidatorRes = await dataValidator.validateRequest(request);
+    console.log("requestValidatorRes: " + requestValidatorRes.validationFailed);
+    console.log("requestValidatorRes: " + requestValidatorRes.failureMessage);
+    if(requestValidatorRes.validationFailed) {
+        return response.status(400).header(headers).send(); 
+    }
     const userData = {
         first_name: request.body.first_name,
         last_name: request.body.last_name,
@@ -29,13 +37,66 @@ const createUser = async (request, response) => {
             account_created: newUser.account_created.toISOString(), 
             account_updated: newUser.account_updated.toISOString(), 
         };
-        return response.status(201).header(headers).json(responseMessage).send();
+        return response.status(201).header(headers).send();
     } catch (error) {
         console.log("User Controller: Error");
     }
 
 };
 
+const getUser = async (request, response) => {
+    try {
+        console.log("Request: " + request.toString());
+        const requestValidatorRes = await dataValidator.validateGetRequest(request);
+        console.log("requestValidatorRes: " + requestValidatorRes.validationFailed);
+        console.log("requestValidatorRes: " + requestValidatorRes.failureMessage);
+        if(requestValidatorRes.validationFailed) {
+            return response.status(400).header(headers).send(); 
+        }
+
+        const userData = await userService.getUser(request.authUser.email);
+        if (userData instanceof Error) {
+            return response.status(404).header(headers).send(); 
+        }
+        return response.status(200).header(headers).json(userData).send();
+    } catch (error) {
+        console.log("User Controller get User: Error: " + error);
+    }
+};
+
+const updateUser = async (request, response) => {
+    console.log("Request: " + request.toString());
+    const requestValidatorRes = await dataValidator.validateRequest(request);
+    console.log("requestValidatorRes: " + requestValidatorRes.validationFailed);
+    console.log("requestValidatorRes: " + requestValidatorRes.failureMessage);
+    if(requestValidatorRes.validationFailed) {
+        return response.status(400).header(headers).send(); 
+    }
+    try {
+        const userToBeUpdate = await userService.getUser(request.authUser.email);
+        if (userToBeUpdate instanceof Error) {
+            return response.status(404).header(headers).send(); 
+        }
+        const userData = {
+            first_name: request.body.first_name,
+            last_name: request.body.last_name,
+            password: request.body.password
+        }
+        const savedUser = await userService.saveUser(userToBeUpdate, userData);
+        if(!savedUser) {
+            return res.status(500).header(headers).send();
+        }
+        return response.status(204).header(headers).send();
+    } catch (error) {
+        console.log("Error in user controller.");
+        response.status(500).header(headers).send();
+    }
+
+};
+
+
 module.exports = {
     createUser,
+    getUser,
+    updateUser,
 };

@@ -23,6 +23,61 @@ const createUser = async (userData) => {
 
 };
 
+const getUser = async (email) => {
+    try {
+        const user = await User.findOne({ 
+            where: { email }, 
+            attributes: { exclude: ['password'] } 
+        });
+        if (user) {
+            console.log("User found");
+            return user;
+        } else {
+            console.log("User not found");
+            return new Error("User Not Found");
+        }
+    } catch (error) {
+        console.log("Error in get user. Error: " + error);
+        return new Error("Something went wrong. Error in get user.");
+    }
+
+};
+
+const getUserByEmail = async (email) => {
+    try {
+        const user = await User.findOne({ where: { email } });
+        if (user) {
+            console.log("User found: get by email");
+            return user;
+        } else {
+            console.log("User not found: get by email");
+            return new Error("User Not Found: get by email");
+        }
+    } catch (error) {
+        console.log("Error in get user by email. Error: " + error);
+        return new Error("Something went wrong. Error in get user.");
+    }
+
+};
+
+const saveUser = async (user, userData) => {
+    try {
+        user.set({
+            first_name: userData.first_name,
+            last_name: userData.last_name,
+            password: userData.password
+        });
+        await user.save();
+        return user;
+    } catch (error) {
+        console.log("Error in save user. Error: " + error);
+        return new Error("Something went wrong. Error in save user.");
+    }
+};
+
 module.exports = {
     createUser,
+    getUser,
+    getUserByEmail,
+    saveUser,
   };
