@@ -35,11 +35,11 @@ const createUser = async (request, response) => {
             id: newUser.id,
             first_name: newUser.first_name,
             last_name: newUser.last_name,
-            username: newUser.username,
+            email: newUser.email,
             account_created: newUser.account_created.toISOString(), 
             account_updated: newUser.account_updated.toISOString(), 
         };
-        return response.status(201).header(headers).send();
+        return response.status(201).header(headers).send(responseMessage);
     } catch (error) {
         console.log("User Controller: Error");
     }

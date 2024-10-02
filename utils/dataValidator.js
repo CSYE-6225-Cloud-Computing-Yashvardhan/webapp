@@ -24,10 +24,10 @@ const validateRequest = async (request) => {
         if (!first_name || !last_name || !password || !email) {
             return { validationFailed: true, failureMessage: "Invalid Request - empty request data (name, email, password)." };
         }
-        if (Object.keys(extra).length > 0) {
+        if (!request.method === 'POST' && Object.keys(extra).length > 0) {
             return { validationFailed: true, failureMessage: "Invalid Request - contains unwanted data." };
         }
-
+  
         const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/;
         if(!emailRegex.test(email)) {
             return { validationFailed: true, failureMessage: "Invalid Request - invalid email format." };
