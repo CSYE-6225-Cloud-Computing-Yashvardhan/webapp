@@ -11,7 +11,8 @@ app.use('/', (req, res) => {
     res.status(404).header('Cache-Control', 'no-cache').header('Pragma', 'no-cache').send();
 });
 
-app.listen(PORT, () => {
+/*app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
-});
+});*/
 
+module.exports = app;

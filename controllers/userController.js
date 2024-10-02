@@ -23,6 +23,8 @@ const createUser = async (request, response) => {
     console.log("userData: " + userData);
     try {
         const newUser = await userService.createUser(userData);
+        console.log("Create User: newUser is TypeOf" + typeof(newUser));
+        console.log("Create User: " + newUser.message);
         if (newUser instanceof Error) {
             if(newUser.message == "User already exists") {
                 return response.status(400).header(headers).send();
