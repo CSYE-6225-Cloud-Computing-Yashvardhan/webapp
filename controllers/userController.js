@@ -52,6 +52,10 @@ const getUser = async (request, response) => {
         const requestValidatorRes = await dataValidator.validateGetRequest(request);
         console.log("requestValidatorRes: " + requestValidatorRes.validationFailed);
         console.log("requestValidatorRes: " + requestValidatorRes.failureMessage);
+        if(await dataValidator.validateRequestMethod(request, 'GET')) {
+            console.log("Method not allowed - validateRequestMethod");
+            return response.status(405).header(headers).send();
+        }
         if(requestValidatorRes.validationFailed) {
             return response.status(400).header(headers).send(); 
         }
@@ -71,6 +75,10 @@ const updateUser = async (request, response) => {
     const requestValidatorRes = await dataValidator.validateRequest(request);
     console.log("requestValidatorRes: " + requestValidatorRes.validationFailed);
     console.log("requestValidatorRes: " + requestValidatorRes.failureMessage);
+    if(await dataValidator.validateRequestMethod(request, 'PUT')) {
+        console.log("Method not allowed - validateRequestMethod");
+        return response.status(405).header(headers).send();
+    }
     if(requestValidatorRes.validationFailed) {
         return response.status(400).header(headers).send(); 
     }
@@ -79,6 +87,10 @@ const updateUser = async (request, response) => {
         if (userToBeUpdate instanceof Error) {
             return response.status(404).header(headers).send(); 
         }
+        if (userToBeUpdate.email !== request.body.email) {
+            console.log("Email Update not allowed");
+            return response.status(400).header(headers).send();  
+        }
         const userData = {
             first_name: request.body.first_name,
             last_name: request.body.last_name,
@@ -86,7 +98,7 @@ const updateUser = async (request, response) => {
         }
         const savedUser = await userService.saveUser(userToBeUpdate, userData);
         if(!savedUser) {
-            return res.status(500).header(headers).send();
+            return response.status(500).header(headers).send();
         }
         return response.status(204).header(headers).send();
     } catch (error) {

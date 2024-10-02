@@ -1,5 +1,3 @@
-const { request } = require("express");
-
 
 const validateRequest = async (request) => {
     try {
@@ -76,8 +74,9 @@ const validateRequestMethod = async (request, expectedMethod) => {
     return request.method !== expectedMethod;
 }
 
+
 module.exports = {
     validateRequest,
     validateGetRequest,
-    validateRequestMethod,
+    validateRequestMethod
 }

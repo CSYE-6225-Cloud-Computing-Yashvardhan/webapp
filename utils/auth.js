@@ -8,8 +8,9 @@ const headers = {
 const authenticateUser = async (request, response, next) => {
     try {
         const authHeader = request.headers.authorization;
-        if(!authHeader || !authHeader.startsWith("Basic ")) {
-            response.status(401).header(headers).send();
+        if(!authHeader || (authHeader && !authHeader.startsWith("Basic "))) {
+            console.log("Auth Token Missing");
+            return response.status(401).header(headers).send();
         }
         const base64Credentials = authHeader.split(' ')[1];
         const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii');
