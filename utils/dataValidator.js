@@ -24,7 +24,7 @@ const validateRequest = async (request) => {
         if (!first_name || !last_name || !password || !email) {
             return { validationFailed: true, failureMessage: "Invalid Request - empty request data (name, email, password)." };
         }
-        if (!request.method === 'POST' && Object.keys(extra).length > 0) {
+        if (Object.keys(extra).length > 0) {
             return { validationFailed: true, failureMessage: "Invalid Request - contains unwanted data." };
         }
   

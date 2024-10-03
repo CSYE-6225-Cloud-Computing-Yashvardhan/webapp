@@ -55,7 +55,7 @@ const getUserByEmail = async (email) => {
         }
     } catch (error) {
         console.log("Error in get user by email. Error: " + error);
-        return new Error("Something went wrong. Error in get user.");
+        return new Error("Service Error");
     }
 
 };
