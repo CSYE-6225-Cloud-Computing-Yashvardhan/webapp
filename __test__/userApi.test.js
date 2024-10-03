@@ -28,6 +28,11 @@ describe("Integration Test", () => {
 
     });
 
+    it('Testing CREATE request without payload', async () => {
+        const getUserApiResponse = await request(app).post(`/v1/user/`);
+        expect(getUserApiResponse.statusCode).toBe(400);
+    });
+
     it('Update user account and validate using GET request', async () => {
         userData.first_name = "Yashvardhan";
         const updateUserApiResponse = await request(app).put("/v1/user/self")
@@ -48,6 +53,11 @@ describe("Integration Test", () => {
     it('Testing with invalid user', async () => {
         const getUserApiResponse = await request(app).get(`/v1/user/self`).set('Authorization', `Basic ${Buffer.from("invalid@email.com:12345").toString('base64')}`);
         expect(getUserApiResponse.statusCode).toBe(401);
+    });
+
+    it('Testing GET request with payload', async () => {
+        const getUserApiResponse = await request(app).get(`/v1/user/self`).send(userData).set('Authorization', `Basic ${Buffer.from("invalid@email.com:12345").toString('base64')}`);
+        expect(getUserApiResponse.statusCode).toBe(400);
     });
 
 });
