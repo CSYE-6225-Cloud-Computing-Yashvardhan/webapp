@@ -8,6 +8,10 @@ const headers = {
 const authenticateUser = async (request, response, next) => {
     try {
         const authHeader = request.headers.authorization;
+        if (request.method !== 'GET' && request.method !== 'PUT') {
+            console.log("Method not allowed - auth check");
+            return response.status(405).header(headers).send();
+        }
         if(!authHeader || (authHeader && !authHeader.startsWith("Basic "))) {
             console.log("Auth Token Missing");
             return response.status(401).header(headers).send();
