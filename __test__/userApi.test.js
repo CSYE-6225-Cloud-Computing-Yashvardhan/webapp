@@ -60,6 +60,5 @@ describe("Integration Test", () => {
         expect(getUserApiResponse.statusCode).toBe(400);
     });
 
-    console.log(abc.abc);
 
 });
