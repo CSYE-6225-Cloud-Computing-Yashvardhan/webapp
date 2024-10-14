@@ -25,15 +25,6 @@ source "amazon-ebs" "csye6225-a04" {
     instance_type = "${var.instance_type}" 
     source_ami    = "${var.source_ami}"
 
-    source_ami_filter {
-        filters = {
-        name                = "amzn2-ami-kernel-5.10-hvm-2.*.0-x86_64-gp2"
-        root-device-type    = "ebs"
-        virtualization-type = "hvm"
-        }
-        most_recent = true
-        owners      = ["amazon"]
-    }
 
     launch_block_device_mappings {
         delete_on_termination = true
@@ -64,7 +55,12 @@ build {
         "DB_HOST"="${var.db_host}"
         "DB_PASSWORD=${var.db_password}"
         ]
-        script = "./app.sh"
+        script = [
+            "../scripts/user.sh",
+            "../scripts/install.sh",
+            "../scripts/webapp-setup.sh",
+            "../scripts/systemd.sh"
+        ]
     }
 
 }
