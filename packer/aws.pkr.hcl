@@ -1,8 +1,8 @@
 packer {
     required_plugins {
         amazon = {
-            version = ">= 1.0.0, <2.0.0"
-            source  = "github.com/hashicorp/amazon"
+            version = "${var.plugin_version}"
+            source  = "${var.plugin_source}" 
         }
     }
 }
@@ -11,8 +11,8 @@ packer {
 source "amazon-ebs" "csye6225-a04" {
     region          = "${var.aws_region}"
     ami_name        = "csye6225_${formatdate("YYYY_MM_DD_hh_mm_ss", timestamp())}"
-    ami_description = "AMI for CSYE 6225"
-    //ami_users       = var.ami_users
+    ami_description = "${var.aws_ami_desc}"
+    ami_users       = "${var.ami_users}"
     ami_regions = [
         var.aws_region
     ]
@@ -21,8 +21,10 @@ source "amazon-ebs" "csye6225-a04" {
         delay_seconds = 120
         max_attempts  = 50
     }
-    instance_type = "${var.instance_type}" // "t2.small"
-    source_ami    = "${var.source_ami}" // "ami-0866a3c8686eaeeba"
+
+    instance_type = "${var.instance_type}" 
+    source_ami    = "${var.source_ami}"
+
     source_ami_filter {
         filters = {
         name                = "amzn2-ami-kernel-5.10-hvm-2.*.0-x86_64-gp2"
@@ -63,6 +65,6 @@ build {
         "DB_PASSWORD=${var.db_password}"
         ]
         script = "./app.sh"
-  }
+    }
 
 }
