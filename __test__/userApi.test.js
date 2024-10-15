@@ -59,6 +59,6 @@ describe("Integration Test", () => {
         const getUserApiResponse = await request(app).get(`/v1/user/self`).send(userData).set('Authorization', `Basic ${Buffer.from("invalid@email.com:12345").toString('base64')}`);
         expect(getUserApiResponse.statusCode).toBe(400);
     });
-
+    console.log(abc.abc);
 
 });
