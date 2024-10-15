@@ -1,0 +1,19 @@
+name: Packer Validation Check
+
+on:
+    pull_request:
+      branches:
+        - main
+
+jobs:
+  packer-validate:
+    name: "Packer Format and Validate"
+
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4

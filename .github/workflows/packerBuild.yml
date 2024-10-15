@@ -1,0 +1,19 @@
+name: Packer Build Custom Image
+
+on:
+    push:
+      branches:
+        - main
+
+jobs:
+  packer-image-build:
+    name: "Packer Build Custom Image"
+
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
