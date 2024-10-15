@@ -37,11 +37,3 @@ variable "db_password" {
 variable "instance_type" {
     type    = string
 }
-
-variable "plugin_source" {
-    type    = string
-}
-
-variable "plugin_version" {
-    type    = string
-}

@@ -1,22 +1,67 @@
 packer {
     required_plugins {
         amazon = {
-            version = "${var.plugin_version}"
-            source  = "${var.plugin_source}" 
+            version = " >=1.0.0, <2.0.0"
+            source  = "github.com/hashicorp/amazon" 
         }
     }
 }
+
+variable "aws_region" {
+    type    = string
+}
+
+variable "aws_ami_desc" {
+    type = string
+}
+
+variable "source_ami" {
+    type    = string
+}
+
+/*variable "ami_users" {
+    type    = string 
+}*/
+
+variable "ssh_username" {
+    type    = string
+}
+ 
+variable "subnet_id" {
+    type    = string
+}
+
+variable "db_host" {
+    type    = string
+}
+
+variable "db_name" {
+    type    = string
+}
+
+variable "db_user" {
+    type    = string
+}
+
+variable "db_password" {
+    type    = string
+}
+
+variable "instance_type" {
+    type    = string
+}
+
 
 
 source "amazon-ebs" "csye6225-a04" {
     region          = "${var.aws_region}"
     ami_name        = "csye6225_${formatdate("YYYY_MM_DD_hh_mm_ss", timestamp())}"
     ami_description = "${var.aws_ami_desc}"
-    ami_users       = "${var.ami_users}"
+    //ami_users       = "${var.ami_users}"
     ami_regions = [
         var.aws_region
     ]
-
+    ssh_username = "${var.ssh_username}" 
     aws_polling {
         delay_seconds = 120
         max_attempts  = 50
@@ -38,24 +83,25 @@ build {
     sources = ["source.amazon-ebs.csye6225-a04"]
 
     provisioner "file" {
-        source      = "./webapp.service"
+        source      = "../webapp.service"
         destination = "/tmp/webapp.service"
     }
 
     provisioner "file" {
-        source      = "./webapp.zip"
-        destination = "/home/csye6225/webapp.zip"
+        source      = "../webapp.zip"
+        destination = "/tmp/webapp.zip"
     }
 
     provisioner "shell" {
         environment_vars = [
         "DEBIAN_FRONTEND=noninteractive",
         "CHECKPOINT_DISABLE=1",
-        "DB_NAME"="${var.db_name}"
-        "DB_HOST"="${var.db_host}"
-        "DB_PASSWORD=${var.db_password}"
+        "DB_PASSWORD=${var.db_password}",
+        "DB_USER=${var.db_user}",
+        "DB_NAME=${var.db_name}",
+        "DB_HOST=${var.db_host}"
         ]
-        script = [
+        scripts = [
             "../scripts/user.sh",
             "../scripts/install.sh",
             "../scripts/webapp-setup.sh",

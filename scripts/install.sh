@@ -20,12 +20,10 @@ echo "Securing MySQL installation..."
 sudo systemctl start mysql
 
 # Enable MySQL to start on boot
-sudo systemctl enable mysqld
+sudo systemctl enable mysql
 
-mysql -e "CREATE DATABASE IF NOT EXISTS cloud_native_app;"
-mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'root';"
-mysql -e "GRANT ALL PRIVILEGES ON cloud_native_app.* TO 'root'@'localhost';"
-mysql -e "FLUSH PRIVILEGES;"
+sudo mysql -u root -p"$DB_PASSWORD" -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '$DB_PASSWORD';" -e "CREATE DATABASE IF NOT EXISTS $DB_NAME;"
+sudo mysql -u root -p"$DB_PASSWORD" -e "FLUSH PRIVILEGES;"
 
 mysqlSetup=$?
 if [ $mysqlSetup -eq 0 ]; then 
