@@ -83,12 +83,12 @@ build {
   sources = ["source.amazon-ebs.csye6225-a04"]
 
   provisioner "file" {
-    source      = "../webapp.service"
+    source      = "./webapp.service"
     destination = "/tmp/webapp.service"
   }
 
   provisioner "file" {
-    source      = "../webapp.zip"
+    source      = "./webapp.zip"
     destination = "/tmp/webapp.zip"
   }
 
@@ -102,10 +102,10 @@ build {
       "DB_HOST=${var.db_host}"
     ]
     scripts = [
-      "../scripts/user.sh",
-      "../scripts/install.sh",
-      "../scripts/webapp-setup.sh",
-      "../scripts/systemd.sh"
+      "./scripts/user.sh",
+      "./scripts/install.sh",
+      "./scripts/webapp-setup.sh",
+      "./scripts/systemd.sh"
     ]
   }
 }
