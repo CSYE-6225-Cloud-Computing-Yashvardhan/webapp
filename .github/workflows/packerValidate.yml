@@ -23,7 +23,7 @@ jobs:
 
       - name: Print the webapp directory (For Debugging)
         run: |
-          cd /webapp
+          cd webapp
           ls -al
           cd ..
 
