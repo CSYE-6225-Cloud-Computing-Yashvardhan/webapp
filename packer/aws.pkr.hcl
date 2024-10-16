@@ -23,6 +23,14 @@ variable "source_ami" {
     type    = string 
 }*/
 
+variable "aws_access_key_id" {
+    type    = string
+}
+
+variable "aws_secret_access_key" {
+    type    = string
+}
+
 variable "ssh_username" {
     type    = string
 }
@@ -57,6 +65,8 @@ source "amazon-ebs" "csye6225-a04" {
     region          = "${var.aws_region}"
     ami_name        = "csye6225_${formatdate("YYYY_MM_DD_hh_mm_ss", timestamp())}"
     ami_description = "${var.aws_ami_desc}"
+    access_key      = "${var.aws_access_key_id}"
+    secret_key      = "${var.aws_secret_access_key}"
     //ami_users       = "${var.ami_users}"
     ami_regions = [
         var.aws_region

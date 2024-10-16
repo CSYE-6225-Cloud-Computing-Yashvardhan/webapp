@@ -1,9 +1,9 @@
 name: Packer Validation Check
 
 on:
-    pull_request:
-      branches:
-        - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
   packer-validate:
@@ -17,3 +17,56 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Copy App files to /webapp
+        run: rsync -arv --exclude='.git/' --exclude='.github/' --exclude='.gitignore' . ./webapp && ls -R
+
+      - name: Print the webapp directory (For Debugging)
+        run: |
+          cd /webapp
+          ls -al
+          cd ..
+
+      - name: Creating webapp zip file
+        uses: montudor/action-zip@v1
+        with:
+          args: zip -r webapp.zip webapp/
+
+      - name: Delete copied files
+        run: rm -rf webapp && ls -R
+
+      - name: Print all folders (For Debugging)
+        run: ls -al
+
+      - name: Installing Packer
+        uses: hashicorp/setup-packer@main
+        id: setup
+        with:
+          version: "latest"
+
+      - name: Run `packer init`
+        id: init
+        run: "packer init ./packer/aws.pkr.hcl"
+
+      - name: Run `packer fmt` and check for changes
+        id: format
+        run: |
+          packer fmt -check -diff ./packer/aws.pkr.hcl || exit 1
+
+      - name: Run `packer validate`
+        id: validate
+        run: |
+          packer validate \
+          -var "aws_access_key_id=${{ secrets.AWS_ACCESS_KEY_ID }}" \
+          -var "aws_secret_access_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
+          -var "aws_region=${{ vars.AWS_REGION }}" \
+          -var "aws_ami_desc=${{ vars.AWS_AMI_DESC }}" \
+          -var "instance_type=${{ vars.INSTANCE_TYPE }}" \
+          -var "source_ami=${{ vars.SOURCE_AMI }}" \
+          -var "subnet_id=${{ vars.SUBNET_ID }}" \
+          -var "ssh_username=${{ vars.SSH_USERNAME }}" \
+          -var "db_user=${{ secrets.DB_USER }}" \
+          -var "db_password=${{ secrets.DB_PASSWORD }}" \
+          -var "db_host=${{ secrets.DB_HOST }}" \
+          -var "db_name=${{ secrets.DB_NAME }}" \
+          ./packer/aws.pkr.hcl

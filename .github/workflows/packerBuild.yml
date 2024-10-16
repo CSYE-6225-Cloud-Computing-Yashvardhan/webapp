@@ -1,9 +1,9 @@
-name: Packer Build Custom Image
+name: Packer Validation Check
 
 on:
-    push:
-      branches:
-        - main
+  push:
+    branches:
+      - main
 
 jobs:
   packer-image-build:
@@ -17,3 +17,114 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Copy App files to /webapp
+        run: rsync -arv --exclude='.git/' --exclude='.github/' --exclude='.gitignore' . ./webapp && ls -R
+
+      - name: Print the webapp directory (For Debugging)
+        run: |
+          cd /webapp
+          ls -al
+          cd ..
+
+      - name: Creating webapp zip file
+        uses: montudor/action-zip@v1
+        with:
+          args: zip -r webapp.zip webapp/
+
+      - name: Delete copied files
+        run: rm -rf webapp && ls -R
+
+      - name: Print all folders (For Debugging)
+        run: ls -al
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+
+      - name: Install and start MySQL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mysql-server
+          sudo systemctl start mysql
+          sudo systemctl enable mysql
+
+      - name: Setup database
+        run: | 
+          sudo mysql --user=${{ secrets.DB_USER }} --password=${{ secrets.DB_PASSWORD }} -e "CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};"
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Configure Environment Variables
+        run: |
+          echo > .env
+          ls -al | grep .env
+          echo DB_HOST=${{ secrets.DB_HOST }} >> .env
+          echo DB_USER=${{ secrets.DB_USER }} >> .env
+          echo DB_PASSWORD=${{ secrets.DB_PASSWORD }} >> .env
+          echo DB_NAME=${{ secrets.DB_NAME }} >> .env
+          echo DB_PORT=${{ secrets.DB_PORT }} >> .env
+          echo PORT=${{ secrets.PORT }} >> .env
+          
+
+      - name: Run Tests
+        run: npx jest --detectOpenHandles
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+
+      - name: Installing Packer
+        uses: hashicorp/setup-packer@main
+        id: setup
+        with:
+          version: "latest"
+
+      - name: Run `packer init`
+        id: init
+        run: "packer init ./packer/aws.pkr.hcl"
+
+      - name: Run `packer fmt` and check for changes
+        id: format
+        run: |
+          packer fmt -check -diff ./packer/aws.pkr.hcl || exit 1
+
+      - name: Run `packer validate`
+        id: validate
+        run: |
+          packer validate \
+          -var "aws_access_key_id=${{ secrets.AWS_ACCESS_KEY_ID }}" \
+          -var "aws_secret_access_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
+          -var "aws_region=${{ vars.AWS_REGION }}" \
+          -var "aws_ami_desc=${{ vars.AWS_AMI_DESC }}" \
+          -var "instance_type=${{ vars.INSTANCE_TYPE }}" \
+          -var "source_ami=${{ vars.SOURCE_AMI }}" \
+          -var "subnet_id=${{ vars.SUBNET_ID }}" \
+          -var "ssh_username=${{ vars.SSH_USERNAME }}" \
+          -var "db_user=${{ secrets.DB_USER }}" \
+          -var "db_password=${{ secrets.DB_PASSWORD }}" \
+          -var "db_host=${{ secrets.DB_HOST }}" \
+          -var "db_name=${{ secrets.DB_NAME }}" \
+          ./packer/aws.pkr.hcl
+
+      - name: Run `packer build`
+        id: build
+        run: |
+            packer build \
+            -var "aws_access_key_id=${{ secrets.AWS_ACCESS_KEY_ID }}" \
+            -var "aws_secret_access_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
+            -var "aws_region=${{ vars.AWS_REGION }}" \
+            -var "aws_ami_desc=${{ vars.AWS_AMI_DESC }}" \
+            -var "instance_type=${{ vars.INSTANCE_TYPE }}" \
+            -var "source_ami=${{ vars.SOURCE_AMI }}" \
+            -var "subnet_id=${{ vars.SUBNET_ID }}" \
+            -var "ssh_username=${{ vars.SSH_USERNAME }}" \
+            -var "db_user=${{ secrets.DB_USER }}" \
+            -var "db_password=${{ secrets.DB_PASSWORD }}" \
+            -var "db_host=${{ secrets.DB_HOST }}" \
+            -var "db_name=${{ secrets.DB_NAME }}" \
+            ./packer/aws.pkr.hcl
