@@ -18,3 +18,14 @@ if [ $webappStarted -eq 0 ]; then
 else
     echo "Failed - webapp not running."
 fi
+
+#Removing git
+sudo apt-get remove -y git
+gitRemoved=$?
+
+if [ $gitRemoved -eq 0 ]; then 
+    echo "Git is present and it is removed successfully."
+else
+    echo "Git is not present."
+fi
+
