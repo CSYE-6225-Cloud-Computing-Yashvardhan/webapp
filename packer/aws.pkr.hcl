@@ -55,6 +55,41 @@ variable "instance_type" {
   type = string
 }
 
+variable "device_name" {
+  type    = string
+  default = "/dev/sda1"
+}
+
+variable "volume_size" {
+  type    = number
+  default = 8
+}
+
+variable "volume_type" {
+  type    = string
+  default = "gp2"
+}
+
+variable "scripts" {
+  type    = list(string)
+  default = ["./scripts/user.sh", "./scripts/install.sh", "./scripts/webapp-setup.sh", "./scripts/systemd.sh"]
+}
+
+variable "ami_users" {
+  type    = list(string)
+  default = []
+}
+
+variable "delay_seconds" {
+  type    = number
+  default = 120
+}
+
+variable "max_attempts" {
+  type    = number
+  default = 50
+}
+
 source "amazon-ebs" "csye6225-a04" {
   region          = var.aws_region
   ami_name        = "csye6225_${formatdate("YYYY_MM_DD_hh_mm_ss", timestamp())}"
@@ -65,17 +100,18 @@ source "amazon-ebs" "csye6225-a04" {
   instance_type   = var.instance_type
   source_ami      = var.source_ami
   ami_regions     = [var.aws_region]
+  ami_users       = var.ami_users
 
   launch_block_device_mappings {
     delete_on_termination = true
-    device_name           = "/dev/sda1"
-    volume_size           = 8
-    volume_type           = "gp2"
+    device_name           = var.device_name
+    volume_size           = var.volume_size
+    volume_type           = var.volume_type
   }
 
   aws_polling {
-    delay_seconds = 120
-    max_attempts  = 50
+    delay_seconds = var.delay_seconds
+    max_attempts  = var.max_attempts
   }
 }
 
@@ -101,11 +137,6 @@ build {
       "DB_NAME=${var.db_name}",
       "DB_HOST=${var.db_host}"
     ]
-    scripts = [
-      "./scripts/user.sh",
-      "./scripts/install.sh",
-      "./scripts/webapp-setup.sh",
-      "./scripts/systemd.sh"
-    ]
+    scripts = var.scripts
   }
 }
