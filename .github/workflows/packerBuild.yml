@@ -109,7 +109,6 @@ jobs:
           -var "db_password=${{ secrets.DB_PASSWORD }}" \
           -var "db_host=${{ secrets.DB_HOST }}" \
           -var "db_name=${{ secrets.DB_NAME }}" \
-          -var "ami_users=${{ secrets.AMI_USERS }}" \
           ./packer/aws.pkr.hcl
 
       - name: Run `packer build`
@@ -128,5 +127,4 @@ jobs:
             -var "db_password=${{ secrets.DB_PASSWORD }}" \
             -var "db_host=${{ secrets.DB_HOST }}" \
             -var "db_name=${{ secrets.DB_NAME }}" \
-            -var "ami_users=${{ secrets.AMI_USERS }}" \
             ./packer/aws.pkr.hcl

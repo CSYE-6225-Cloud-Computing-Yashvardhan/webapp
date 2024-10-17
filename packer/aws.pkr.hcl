@@ -77,7 +77,7 @@ variable "scripts" {
 
 variable "ami_users" {
   type    = list(string)
-  default = []
+  default = ["050752609889"]
 }
 
 variable "delay_seconds" {
