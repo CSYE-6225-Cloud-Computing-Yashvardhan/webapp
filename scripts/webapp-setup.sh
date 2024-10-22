@@ -15,13 +15,14 @@ echo "Unzipping webapp..."
 sudo unzip webapp.zip
 
 
+: << 'END_COMMENT'
 # temp - creating env file
 cd /home/csye6225/webapp || exit
 sudo touch .env
 echo > sudo tee -a .env
 sudo ls -al | grep .env
 
-: << 'END_COMMENT'
+
 # Setting values in .env file
 echo DB_HOST=127.0.0.1 | sudo tee -a .env
 echo DB_USER="$DB_USER" | sudo tee -a .env
@@ -29,9 +30,8 @@ echo DB_PASSWORD="$DB_PASSWORD" | sudo tee -a .env
 echo DB_NAME="$DB_NAME" | sudo tee -a .env
 echo DB_PORT=3306 | sudo tee -a .env
 echo PORT=3000 | sudo tee -a .env
-END_COMMENT
 cd /home/csye6225/ || exit
-
+END_COMMENT
 
 
 # Changing permissions
