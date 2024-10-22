@@ -6,8 +6,10 @@ sudo cp /tmp/webapp.service /etc/systemd/system/
 # Reload the systemd daemon to recognize the new service
 sudo systemctl daemon-reload
 
+: << 'END_COMMENT'
 # Enable webapp.service to start on boot
 sudo systemctl enable webapp.service
+
 
 # Start the webapp.service
 sudo systemctl start webapp.service
@@ -18,6 +20,7 @@ if [ $webappStarted -eq 0 ]; then
 else
     echo "Failed - webapp not running."
 fi
+END_COMMENT
 
 #Removing git
 sudo apt-get remove -y git
