@@ -6,10 +6,11 @@ sudo cp /tmp/webapp.service /etc/systemd/system/
 # Reload the systemd daemon to recognize the new service
 sudo systemctl daemon-reload
 
+: << 'END_COMMENT'
 # Enable webapp.service to start on boot
 sudo systemctl enable webapp.service
 
-: << 'END_COMMENT'
+
 # Start the webapp.service
 sudo systemctl start webapp.service
 
