@@ -8,3 +8,7 @@ sudo apt install unzip -y
 echo "Installing Node.js and npm..."
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt install nodejs -y
+
+# Install AWS Cloud Watch
+echo "Installing Amazon Cloud Watch..."
+sudo apt install -y amazon-cloudwatch-agent

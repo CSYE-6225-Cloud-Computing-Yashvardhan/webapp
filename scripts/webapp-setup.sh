@@ -28,3 +28,7 @@ echo "Installing project dependencies."
 cd /home/csye6225/webapp || exit
 sudo npm install
 echo "Webapp setup complete."
+
+# Copy Amazon Cloud Watch
+sudo mv /tmp/cloudwatch-config.json /opt/cloudwatch-config.json
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/cloudwatch-config.json -s
