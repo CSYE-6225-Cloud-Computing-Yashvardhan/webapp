@@ -1,4 +1,5 @@
 const User = require("../models/user");
+const UserImage = require("../models/userImage");
 
 
 const createUser = async (userData) => {
@@ -75,9 +76,35 @@ const saveUser = async (user, userData) => {
     }
 };
 
+const saveUserImage = async() => {
+    try {
+
+    } catch (error) {
+        
+    }
+}
+
+const getUserImage = async(user_id) => {
+    try {
+        const image = await UserImage.findOne({ where: { user_id } });
+        if (image) {
+            console.log("User Image found: get by user_id");
+            return image;
+        } else {
+            console.log("User Image not found: get by user_id");
+            return new Error("User Image Not Found: get by user_id");
+        }
+    } catch (error) {
+        console.log("Error in get user by email. Error: " + error);
+        return new Error("Service Error");
+    }
+}
+
 module.exports = {
     createUser,
     getUser,
     getUserByEmail,
     saveUser,
+    saveUserImage,
+    getUserImage,
   };

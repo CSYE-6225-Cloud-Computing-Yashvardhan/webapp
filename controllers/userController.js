@@ -108,9 +108,59 @@ const updateUser = async (request, response) => {
 
 };
 
+const getUserImage = async (request, response) => {
+    try {
+        console.log("Request: " + request.toString());
+        const requestValidatorRes = await dataValidator.validateGetRequest(request);
+        console.log("requestValidatorRes: " + requestValidatorRes.validationFailed);
+        console.log("requestValidatorRes: " + requestValidatorRes.failureMessage);
+        if(await dataValidator.validateRequestMethod(request, 'GET')) {
+            console.log("Method not allowed - validateRequestMethod");
+            return response.status(405).header(headers).send();
+        }
+        if(requestValidatorRes.validationFailed) {
+            return response.status(400).header(headers).send(); 
+        }
+
+        const userImage = await userService.getUserImage(request.authUser.id);
+        if (userImage instanceof Error) {
+            return response.status(404).header(headers).send(); 
+        }
+        return response.status(200).header(headers).json(userImage).send();
+    } catch (error) {
+        console.log("User Controller get User: Error: " + error);
+    }
+};
+
+const saveUserImage = async (request, response) => {
+    try {
+        console.log("Request: " + request.toString());
+        const requestValidatorRes = await dataValidator.validateGetRequest(request);
+        console.log("requestValidatorRes: " + requestValidatorRes.validationFailed);
+        console.log("requestValidatorRes: " + requestValidatorRes.failureMessage);
+        if(await dataValidator.validateRequestMethod(request, 'POST')) {
+            console.log("Method not allowed - validateRequestMethod");
+            return response.status(405).header(headers).send();
+        }
+        if(requestValidatorRes.validationFailed) {
+            return response.status(400).header(headers).send(); 
+        }
+
+        const userImage = await userService.getUserImage(request.authUser.id);
+        if (userImage instanceof Error) {
+            return response.status(404).header(headers).send(); 
+        }
+        return response.status(200).header(headers).json(userImage).send();
+    } catch (error) {
+        console.log("User Controller get User: Error: " + error);
+    }
+};
+
 
 module.exports = {
     createUser,
     getUser,
     updateUser,
+    getUserImage,
+    saveUserImage,
 };

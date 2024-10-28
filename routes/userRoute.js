@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateUser } = require("../utils/auth");
-const { createUser, getUser, updateUser } = require("../controllers/userController");
+const { createUser, getUser, updateUser, getUserImage } = require("../controllers/userController");
 
 const headers = {
     'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -21,6 +21,13 @@ router.put('/self', authenticateUser, updateUser);
 router.all('/self', (request, response) => {
     console.log("Method not allowed");
     response.status(405).header(headers).send();
-})
+});
+
+router.post('/self/pic', authenticateUser, '');
+router.get('/self/pic', authenticateUser, getUserImage);
+router.all('/self/pic', (request, response) => {
+    console.log("Method not allowed");
+    response.status(405).header(headers).send();
+});
 
 module.exports = router;
