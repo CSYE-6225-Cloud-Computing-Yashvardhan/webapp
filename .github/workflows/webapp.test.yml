@@ -43,7 +43,7 @@ jobs:
                 echo PORT=${{ secrets.PORT }} >> .env
                 
             - name: Run Tests
-              run: npx jest --detectOpenHandles
+              run: npx jest --forceExit
 
 
 
