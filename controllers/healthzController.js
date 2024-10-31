@@ -1,17 +1,19 @@
 const healthService = require("../services/healthzService");
+const { logger } = require('../utils/logger');
+
 const headers = {
     'Cache-Control': 'no-cache, no-store, must-revalidate',
     'Pragma': 'no-cache',
     'X-Content-Type-Options': 'nosniff',
 };
 const checkHealth = async (request, response) => {
+    logger.info(`Checking Database connection. URL: ${request.originalUrl}`);
     const isDatabaseConnected = await healthService.checkDatabaseConnection();
-    console.log("is DB connected: " + isDatabaseConnected);
     if(isDatabaseConnected) {
-        console.log("Database connection success");
+        logger.info(`Database connection successful.`);
         return response.status(200).header(headers).send();
     } else {
-        console.log("Database connection unsuccessful");
+        logger.error(`Database connection unsuccessful. Status: 503`);
         return response.status(503).header(headers).send();
     }
 }

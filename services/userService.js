@@ -1,9 +1,14 @@
 const User = require("../models/user");
 const UserImage = require("../models/userImage");
+const S3 = require("../configs/awsConfig");
+const statsdClient = require('../utils/statsD.js');
+const { logger } = require('../utils/logger');
 
 
 const createUser = async (userData) => {
     try {
+        logger.info(`Service Call: Create User, Status: In-Progress`);
+        const dbStart = Date.now();
         const isUserAlreadyExist = await User.findOne({ where: { email: userData.email } });
         console.log("isUserAlreadyExist: " + isUserAlreadyExist);
         if (isUserAlreadyExist) {
@@ -16,9 +21,11 @@ const createUser = async (userData) => {
             last_name: userData.last_name 
         });
         console.log("newUser: " + newUser);
+        statsdClient.timing(`db.query.createUser.duration`, Date.now() - dbStart);
+        logger.info(`Service Call: Create User, Status: Completed | User Email: ${newUser.email}`);
         return newUser;
     } catch (error) {
-        console.log("Error in user creation. Error: " + error);
+        logger.error(`Service Call: Create User, Status: Failed, Error: ${error}`);
         return new Error("Something went wrong. Error in user creation")
     }
 
@@ -26,10 +33,14 @@ const createUser = async (userData) => {
 
 const getUser = async (email) => {
     try {
+        logger.info(`Service Call: Get User, Status: In-Progress`);
+        const dbStart = Date.now();
         const user = await User.findOne({ 
             where: { email }, 
             attributes: { exclude: ['password'] } 
         });
+        statsdClient.timing(`db.query.getUser.duration`, Date.now() - dbStart);
+        logger.info(`Service Call: Get User, Status: Completed`); 
         if (user) {
             console.log("User found");
             return user;
@@ -38,7 +49,7 @@ const getUser = async (email) => {
             return new Error("User Not Found");
         }
     } catch (error) {
-        console.log("Error in get user. Error: " + error);
+        logger.error(`Service Call: Get User, Status: Failed, Error: ${error}`);
         return new Error("Something went wrong. Error in get user.");
     }
 
@@ -46,7 +57,11 @@ const getUser = async (email) => {
 
 const getUserByEmail = async (email) => {
     try {
+        logger.info(`Service Call: Get User By Email, Status: In-Progress`);
+        const dbStart = Date.now();
         const user = await User.findOne({ where: { email } });
+        statsdClient.timing(`db.query.getUserByEmail.duration`, Date.now() - dbStart);
+        logger.info(`Service Call: Get User By Email, Status: Completed`); 
         if (user) {
             console.log("User found: get by email");
             return user;
@@ -55,7 +70,7 @@ const getUserByEmail = async (email) => {
             return new Error("User Not Found: get by email");
         }
     } catch (error) {
-        console.log("Error in get user by email. Error: " + error);
+        logger.error(`Service Call: Get User By Email, Status: Failed, Error: ${error}`);
         return new Error("Service Error");
     }
 
@@ -63,40 +78,110 @@ const getUserByEmail = async (email) => {
 
 const saveUser = async (user, userData) => {
     try {
+        logger.info(`Service Call: Save User, Status: In-Progress`);
+        const dbStart = Date.now();
         user.set({
             first_name: userData.first_name,
             last_name: userData.last_name,
             password: userData.password
         });
         await user.save();
+        statsdClient.timing(`db.query.saveUser.duration`, Date.now() - dbStart);
+        logger.info(`Service Call: Save User, Status: Completed`); 
         return user;
     } catch (error) {
-        console.log("Error in save user. Error: " + error);
+        logger.error(`Service Call: Save User, Status: Failed, Error: ${error}`);
         return new Error("Something went wrong. Error in save user.");
     }
 };
 
-const saveUserImage = async() => {
+const saveUserImage = async(params, imageData) => {
     try {
-
+        logger.info(`Service Call: Save User Image, Status: In-Progress`);
+        const dbStart1 = Date.now();
+        const isImageAlreadyPresent = await getUserImage(imageData.user_id);
+        statsdClient.timing(`db.query.getUserImage.duration`, Date.now() - dbStart1);
+        if(!(isImageAlreadyPresent instanceof Error)) {
+            logger.error(`Service Call: Save User Image, Status: Failed, Error: ${isImageAlreadyPresent.message}`);
+            return new Error("Profile photo already exist");
+        }
+        const s3Start = Date.now();
+        const imageUploadInBucket = S3.upload(params).promise();
+        statsdClient.timing(`aws.s3.upload.duration`, Date.now() - s3Start);
+        if(imageUploadInBucket) {
+            const dbStart = Date.now();
+            const savedImage = await UserImage.create({ 
+                file_name: imageData.file_name,
+                url: imageData.url,
+                user_id: imageData.user_id
+            });
+            statsdClient.timing(`db.query.saveUserImage.duration`, Date.now() - dbStart);
+            logger.info(`Service Call: Save User Image, Status: Completed`); 
+            if (savedImage) {
+                return savedImage;
+            } else {
+                logger.error(`Service Call: Save User Image, Status: Failed, Error: Error in database query`);
+                return new Error("Error in image save to database");
+            } 
+        } else {
+            logger.error(`Service Call: Save User Image, Status: Failed, Error: S3 Bucket image upload failed`);
+            return new Error("Error in image upload to S3 bucket");
+        }
     } catch (error) {
-        
+        logger.error(`Service Call: Save User Image, Status: Failed, Error: ${error}`);
+        return new Error("Something went wrong. Error in upload & save user image. " + error);
     }
 }
 
 const getUserImage = async(user_id) => {
     try {
+        logger.info(`Service Call: Get User Image, Status: In-Progress`);
+        const dbStart = Date.now();
         const image = await UserImage.findOne({ where: { user_id } });
-        if (image) {
-            console.log("User Image found: get by user_id");
+        statsdClient.timing(`db.query.getUserImage.duration`, Date.now() - dbStart);
+        logger.info(`Service Call: Get User Image, Status: In-Progress, ${image}`); 
+        if (image) {            
             return image;
         } else {
-            console.log("User Image not found: get by user_id");
+            logger.warn(`Service Call: Get User Image, Status: Failed. Reason: User Image Not Found`);
             return new Error("User Image Not Found: get by user_id");
         }
     } catch (error) {
-        console.log("Error in get user by email. Error: " + error);
-        return new Error("Service Error");
+        logger.error(`Service Call: Get User Image, Status: Failed, Error: ${error}`);
+        return new Error("Something went wrong. Error in get user image. " + error);
+    }
+}
+
+const deleteUserImage = async(user_id) => {
+    try {
+        logger.info(`Service Call: Delete User Image, Status: In-Progress`);
+        const image = await UserImage.findOne({ where: { user_id } });
+        if (!image) {
+            console.log("User Image not found: get by user_id");
+            return new Error("User Image Not Found: get by user_id");
+        } 
+
+        const params = {
+            Bucket: process.env.AWS_S3_BUCKET_NAME, 
+            Key: image.url
+        };
+        const s3Start = Date.now();
+        const deleteResult = await S3.deleteObject(params).promise();
+        statsdClient.timing('aws.s3.delete.duration', Date.now() - s3Start);
+
+        console.log("S3 delete result:", deleteResult);
+        
+        const dbStart = Date.now();
+        await UserImage.destroy({ where: { user_id } });
+        statsdClient.timing(`db.query.deleteUserImage.duration`, Date.now() - dbStart);
+        logger.info(`Service Call: Delete User Image, Status: Completed`);
+        return {
+            success: true
+        }
+
+    } catch (error) {
+        logger.error(`Service Call: Delete User Image, Status: Failed, Error: ${error}`);
+        return new Error("Something went wrong. Error in user image deletion. " + error);
     }
 }
 
@@ -107,4 +192,5 @@ module.exports = {
     saveUser,
     saveUserImage,
     getUserImage,
-  };
+    deleteUserImage,
+};
