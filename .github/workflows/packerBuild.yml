@@ -68,7 +68,7 @@ jobs:
           
 
       - name: Run Tests
-        run: npx jest --detectOpenHandles --forceExit
+        run: npx jest --forceExit
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
