@@ -25,7 +25,7 @@ router.all('/self', (request, response) => {
     response.status(405).header(headers).send();
 });
 
-router.post('/self/pic', authenticateUser, upload.single('file'), saveUserImage);
+router.post('/self/pic', authenticateUser, upload.single('profilePic'), saveUserImage);
 router.get('/self/pic', authenticateUser, getUserImage);
 router.delete('/self/pic', authenticateUser, deleteUserImage);
 router.all('/self/pic', (request, response) => {
