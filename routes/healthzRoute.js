@@ -11,12 +11,6 @@ const headers = {
 
 router.use((request, response, next) => {
     if (request.method !== 'GET') {
-        createLogEntry({ 
-            level: 'warn', 
-            event: 'API Call', 
-            validationErrors: `Invalid method, Expected: GET, Received: ${request.method}`,
-            url: `${request.originalUrl}` 
-        });
         logger.warn(`Invalid Request: Method Not Allowed. Expected: GET, Received: ${request.method}`);
         return response.status(405).header(headers).send();
     }
