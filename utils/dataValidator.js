@@ -102,6 +102,9 @@ const validateSaveUserImageRequest = async (request) => {
         if (!request.file) {
             return { validationFailed: true, failureMessage: "Invalid Request - no image found." };
         }
+        if (!request.file || !request.file.mimetype || !request.file.mimetype.includes("image/")) {
+            return { validationFailed: true, failureMessage: "Invalid Request - Invalid format." };
+        }
         return { validationFailed: false, failureMessage: "NA" };
     } catch (error) {
         console.log("Error In validateSaveUserImageRequest: " + error);
