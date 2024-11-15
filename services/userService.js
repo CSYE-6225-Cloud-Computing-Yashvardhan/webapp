@@ -1,8 +1,11 @@
 const User = require("../models/user");
 const UserImage = require("../models/userImage");
+const EmailVerification = require("../models/emailVerification");
 const S3 = require("../configs/awsConfig");
 const statsdClient = require('../utils/statsD.js');
 const { logger } = require('../utils/logger');
+const AWS = require('aws-sdk');
+const sns = new AWS.SNS();
 
 
 const createUser = async (userData) => {
@@ -29,6 +32,29 @@ const createUser = async (userData) => {
         return new Error("Something went wrong. Error in user creation")
     }
 
+};
+
+const sendEmailVerficationLink = (user) => {
+    const emailSendTime = Date.now();
+    const message = {
+        email: user.email,
+        userName: user.file_name + user.last_name,
+        domain: process.env.DOMAIN,
+        userId: user.id
+    };
+    sns.publish({
+        Message: JSON.stringify(message),
+        TopicArn: process.env.SNS_TOPIC_ARN
+    })
+    .promise()
+    .then(() => {
+        statsdClient.timing(`aws.sns.publish.duration`, Date.now() - emailSendTime);
+        logger.info(`Verification email request sent to SNS for user: ${newUser.email}`);
+    })
+    .catch(err => {
+        logger.error(`Failed to publish SNS message for email verification: ${err.message}`);
+    });
+    
 };
 
 const getUser = async (email) => {
@@ -185,6 +211,33 @@ const deleteUserImage = async(user_id) => {
     }
 }
 
+const verifyEmailToken = async (userId, token) => {
+    try {
+        logger.info(`Service Call: Verify Token, Status: In-Progress`);
+        const verificationToken = await EmailVerification.findOne({ where: { token } });
+        console.log("userId: " + userId);
+        console.log("token: " + token);
+        console.log("verificationTokenRecord: " + verificationToken);
+        if (!verificationToken) {
+            return { status: 400, message: "Invalid or expired token"};
+        }
+        if (verificationToken.expires_at < new Date()) {
+            return { status: 410, message: "Invalid or expired token"};
+        }
+        const updateUser = await User.update({ email_verified: true }, { where: { id: verificationToken.user_id } });
+        if (updateUser) {
+            logger.info(`Service Call: Save User, Status: Completed`);
+            return { status: 204, message: "Email Verification success"};
+        } else {
+            logger.error(`Service Call: Verify Token, Status: Failed`);
+            return new Error("Email Verification failed. Error in user updation");
+        }
+    } catch (error) {
+        logger.error(`Service Call: Verify Token, Status: Failed, Error: ${error}`);
+        return new Error(`Error in email token verification.`);
+    }
+}
+
 module.exports = {
     createUser,
     getUser,
@@ -193,4 +246,6 @@ module.exports = {
     saveUserImage,
     getUserImage,
     deleteUserImage,
+    sendEmailVerficationLink,
+    verifyEmailToken
 };

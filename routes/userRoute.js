@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authenticateUser } = require("../utils/auth");
-const { createUser, getUser, updateUser, getUserImage, saveUserImage, deleteUserImage } = require("../controllers/userController");
+const { createUser, getUser, updateUser, getUserImage, saveUserImage, deleteUserImage, verifyUserEmail } = require("../controllers/userController");
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
 const { logger } = require('../utils/logger');
@@ -30,6 +30,12 @@ router.get('/self/pic', authenticateUser, getUserImage);
 router.delete('/self/pic', authenticateUser, deleteUserImage);
 router.all('/self/pic', (request, response) => {
     logger.warn(`Invalid Request: Method Not Allowed. Expected: GET|POST|DELETE, Received: ${request.method}`);
+    response.status(405).header(headers).send();
+});
+
+router.get('/verify', verifyUserEmail);
+router.all('/verify', (request, response) => {
+    logger.warn(`Invalid Request: Method Not Allowed. Expected: GET, Received: ${request.method}`);
     response.status(405).header(headers).send();
 });
 

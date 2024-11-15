@@ -38,6 +38,11 @@ const authenticateUser = async (request, response, next) => {
             logger.error(`User Authentication Failed`);
             return response.status(401).header(headers).send();
         }
+        console.log("isVerified: " + userData.email_verified)
+        if (!userData || !userData.email_verified) {
+            logger.error(`User Authentication Failed - User not verified`);
+            return response.status(401).header(headers).send();
+        }
         request.authUser = userData;
         next();
     } catch (error) {

@@ -4,6 +4,7 @@ const dataValidator = require("../utils/dataValidator");
 const { logger } = require('../utils/logger');
 const fs = require('fs');
 
+
 const headers = {
     'Cache-Control': 'no-cache, no-store, must-revalidate',
     'Pragma': 'no-cache',
@@ -48,7 +49,9 @@ const createUser = async (request, response) => {
             account_updated: newUser.account_updated.toISOString(), 
         };
         logger.info(`API Call: Create User, Status: Creation Completed, Url: ${request.originalUrl}, Code: 201`);
-        return response.status(201).header(headers).send(responseMessage);
+        response.status(201).header(headers).send(responseMessage);
+        userService.sendEmailVerficationLink(newUser)
+        
     } catch (error) {
         logger.error(`API Call: Create User, Status: Creation Failed, Url: ${request.originalUrl}, Code: 500, Reason: ${error}`);
     }
@@ -221,6 +224,38 @@ const deleteUserImage = async (request, response) => {
     }
 };
 
+const verifyUserEmail = async (request, response) => {
+    try {
+        logger.info(`API Call: Verify User, Status: Started, Url: ${request.originalUrl}, Code: 0`);
+        
+        if(await dataValidator.validateRequestMethod(request, 'GET')) {
+            logger.error(`API Call: Verify User, Status: Failed, Url: ${request.originalUrl}, Code: 405, Reason: Request Validation Failed - Method Not Allowed`);
+            return response.status(405).header(headers).send();
+        }
+        logger.info(`API Call: Verify User, Status: In-Progress, Url: ${request.originalUrl}, Code: 0`);
+        const token = request.query.token;
+        const userId = request.query.user;
+        if(!token) {
+            logger.error(`API Call: Verify User, Status: Failed, Url: ${request.originalUrl}, Code: 400, Reason: Invalid or missing token`);
+            return response.status(400).header(headers).send(); 
+        }
+        const result = await userService.verifyEmailToken(userId, token);
+        if (result instanceof Error) {
+            logger.error(`API Call: Verify User, Status: Failed, Url: ${request.originalUrl}, Code: 400, Reason: ${result.message}`);
+            return response.status(400).header(headers).send(); 
+        }
+        const status = result.status;
+        if(status === 204) {
+            logger.info(`API Call: Verify User, Status: Success, Url: ${request.originalUrl}, Code: ${result.status}, Message: ${result.message} `);
+        } else {
+            logger.error(`API Call: Verify User, Status: Failed, Url: ${request.originalUrl}, Code: ${result.status}, Message: ${result.message} `);
+        }
+        return response.status(result.status).header(headers).send();
+    } catch (error) {
+        logger.error(`API Call: Verify User, Status: Failed, Url: ${request.originalUrl}, Code: 500, Reason: ${error}`);
+    }
+}
+
 
 module.exports = {
     createUser,
@@ -229,4 +264,5 @@ module.exports = {
     getUserImage,
     saveUserImage,
     deleteUserImage,
+    verifyUserEmail,
 };
