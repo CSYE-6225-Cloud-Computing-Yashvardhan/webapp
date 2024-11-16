@@ -48,7 +48,7 @@ const sendEmailVerficationLink = (user) => {
     .promise()
     .then(() => {
         statsdClient.timing(`aws.sns.publish.duration`, Date.now() - emailSendTime);
-        logger.info(`Verification email request sent to SNS for user: ${newUser.email}`);
+        logger.info(`Verification email request sent to SNS for user: ${user.email}`);
     })
     .catch(err => {
         logger.error(`Failed to publish SNS message for email verification: Error: ${err} | Message: ${err.message}`);
