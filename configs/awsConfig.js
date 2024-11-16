@@ -8,7 +8,9 @@ const S3 = new s3({
     secretAccessKey: process.env.AWS_SECRET_KEY
 })
 
-const sns = new AWS.SNS();
+const sns = new AWS.SNS({
+    region: process.env.AWS_REGION || 'us-east-1'
+});
 module.exports = {
     S3,
     sns,
