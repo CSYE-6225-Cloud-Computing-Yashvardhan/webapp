@@ -44,7 +44,7 @@ const sendEmailVerficationLink = (user) => {
     };
     sns.publish({
         Message: JSON.stringify(message),
-        TopicArn: process.env.SNS_TOPIC_ARN
+        TopicArn: process.env.EMAIL_VERIFICATION_SNS_ARN
     })
     .promise()
     .then(() => {
