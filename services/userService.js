@@ -1,11 +1,10 @@
 const User = require("../models/user");
 const UserImage = require("../models/userImage");
 const EmailVerification = require("../models/emailVerification");
-const S3 = require("../configs/awsConfig");
+const { S3, sns } = require("../configs/awsConfig");
 const statsdClient = require('../utils/statsD.js');
 const { logger } = require('../utils/logger');
-const AWS = require('aws-sdk');
-const sns = new AWS.SNS();
+
 
 
 const createUser = async (userData) => {
@@ -52,7 +51,7 @@ const sendEmailVerficationLink = (user) => {
         logger.info(`Verification email request sent to SNS for user: ${newUser.email}`);
     })
     .catch(err => {
-        logger.error(`Failed to publish SNS message for email verification: ${err.message}`);
+        logger.error(`Failed to publish SNS message for email verification: Error: ${err} | Message: ${err.message}`);
     });
     
 };
