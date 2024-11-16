@@ -59,6 +59,10 @@ const User = database.sequelize.define('User', {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
         allowNull: false
+    },
+    email_verified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
     }
 }, {
     hooks: {
