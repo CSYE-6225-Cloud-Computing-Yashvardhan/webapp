@@ -4,6 +4,7 @@ const EmailVerification = require("../models/emailVerification");
 const { S3, sns } = require("../configs/awsConfig");
 const statsdClient = require('../utils/statsD.js');
 const { logger } = require('../utils/logger');
+const crypto = require('crypto');
 
 
 
