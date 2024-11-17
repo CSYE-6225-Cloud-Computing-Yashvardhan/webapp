@@ -4,6 +4,7 @@ const EmailVerification = require("../models/emailVerification");
 const { S3, sns } = require("../configs/awsConfig");
 const statsdClient = require('../utils/statsD.js');
 const { logger } = require('../utils/logger');
+const crypto = require('crypto');
 
 
 
@@ -33,27 +34,42 @@ const createUser = async (userData) => {
 
 };
 
-const sendEmailVerficationLink = (user) => {
+const sendEmailVerficationLink = async (user) => {
     const emailSendTime = Date.now();
+    const token = crypto.randomBytes(32).toString('hex');
     const message = {
         email: user.email,
-        userName: user.file_name + user.last_name,
+        userName: `${user.first_name} ${user.last_name}`,
         domain: process.env.DOMAIN,
-        userId: user.id
+        userId: user.id,
+        token: token,
     };
-    sns.publish({
-        Message: JSON.stringify(message),
-        TopicArn: process.env.EMAIL_VERIFICATION_SNS_ARN
-    })
-    .promise()
-    .then(() => {
+
+    try {
+
+        await sns
+            .publish({
+                Message: JSON.stringify(message),
+                TopicArn: process.env.EMAIL_VERIFICATION_SNS_ARN,
+            })
+            .promise();
+
         statsdClient.timing(`aws.sns.publish.duration`, Date.now() - emailSendTime);
         logger.info(`Verification email request sent to SNS for user: ${user.email}`);
-    })
-    .catch(err => {
-        logger.error(`Failed to publish SNS message for email verification: Error: ${err} | Message: ${err.message}`);
-    });
-    
+
+        const expiresAt = new Date(Date.now() + 2 * 60 * 1000);
+        const emailRecord = await EmailVerification.create({
+            user_id: user.id,
+            token: token,
+            expires_at: expiresAt,
+        });
+
+        logger.info(
+            `Email verification record created for ID: ${emailRecord.id}, EMAIL: ${user.email}, EXP_TIME: ${emailRecord.expires_at}`
+        );
+    } catch (error) {
+        logger.error(`Error in sendEmailVerificationLink: ${error.message}`, { error });
+    }
 };
 
 const getUser = async (email) => {
