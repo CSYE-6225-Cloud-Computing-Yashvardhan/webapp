@@ -127,25 +127,18 @@ jobs:
             -var "db_password=${{ secrets.DB_PASSWORD }}" \
             -var "db_host=${{ secrets.DB_HOST }}" \
             -var "db_name=${{ secrets.DB_NAME }}" \
-            ./packer/aws.pkr.hcl
+            ./packer/aws.pkr.hcl | tee packer_output.log
+
+            ami_id=$(grep -oP 'ami-\w+' packer_output.log | tail -n 1)
+            echo "AMI ID: $ami_id"
+            echo "::set-output name=ami_id::$ami_id"
 
       - name: Configure AWS Credentials (Demo Account)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-access-key-id: ${{ secrets.AWS_DEMO_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_DEMO_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
-
-      - name: Get Latest AMI ID
-        id: get_ami
-        run: |
-            export LATEST_AMI_ID=$(aws ec2 describe-images \
-              --executable-users self \
-              --filters "Name=name,Values=${{ vars.AMI_NAME_PATTERN }}" \
-              --query 'Images | sort_by(@, &CreationDate)[-1].ImageId' \
-              --output text)
-              echo "LATEST_AMI_ID=${LATEST_AMI_ID}" >> $GITHUB_ENV
-              echo "LATEST_AMI_ID=${LATEST_AMI_ID}"
 
       - name: Update Launch Template
         id: update_template
@@ -156,7 +149,7 @@ jobs:
             aws ec2 create-launch-template-version \
               --launch-template-id ${{ vars.LAUNCH_TEMPLATE_ID }} \
               --source-version $LATEST_VERSION \
-              --launch-template-data '{"ImageId": "'"${LATEST_AMI_ID}"'"}'
+              --launch-template-data '{"ImageId": "'"${{ steps.build.outputs.ami_id }}"'"}'
             aws ec2 modify-launch-template \
               --launch-template-id ${{ vars.LAUNCH_TEMPLATE_ID }} \
               --default-version $(( LATEST_VERSION + 1 ))
