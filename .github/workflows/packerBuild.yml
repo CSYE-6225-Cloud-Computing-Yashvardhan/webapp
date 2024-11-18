@@ -140,28 +140,18 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_DEMO_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Get Launch Template ID
-        id: fetch_template
-        run: |
-            export LAUNCH_TEMPLATE_ID=$(aws ec2 describe-launch-templates \
-              --filters "Name=tag:Name,Values=csye6225_asg" \
-              --query "LaunchTemplates[0].LaunchTemplateId" \
-              --output text)
-            echo "LAUNCH_TEMPLATE_ID=${LAUNCH_TEMPLATE_ID}" >> $GITHUB_ENV
-            echo "::set-output name=launch_template_id::$LAUNCH_TEMPLATE_ID"
-
       - name: Update Launch Template
         id: update_template
         run: |
             LATEST_VERSION=$(aws ec2 describe-launch-templates \
-              --launch-template-id ${{ steps.fetch_template.outputs.launch_template_id }} \
+              --launch-template-id ${{ vars.LAUNCH_TEMPLATE_ID }} \
               --query "LaunchTemplates[0].LatestVersionNumber" --output text)
             aws ec2 create-launch-template-version \
-              --launch-template-id ${{ steps.fetch_template.outputs.launch_template_id }} \
+              --launch-template-id ${{ vars.LAUNCH_TEMPLATE_ID }} \
               --source-version $LATEST_VERSION \
               --launch-template-data '{"ImageId": "'"${{ steps.build.outputs.ami_id }}"'"}'
             aws ec2 modify-launch-template \
-              --launch-template-id ${{ steps.fetch_template.outputs.launch_template_id }} \
+              --launch-template-id ${{ vars.LAUNCH_TEMPLATE_ID }} \
               --default-version $(( LATEST_VERSION + 1 ))
 
       - name: Start Instance Refresh
