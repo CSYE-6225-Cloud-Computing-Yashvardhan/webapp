@@ -230,15 +230,23 @@ const verifyEmailToken = async (userId, token) => {
     try {
         logger.info(`Service Call: Verify Token, Status: In-Progress`);
         const verificationToken = await EmailVerification.findOne({ where: { token } });
+        const userDetails = await User.findOne({ where: { id: verificationToken.user_id } })
         console.log("userId: " + userId);
         console.log("token: " + token);
         console.log("verificationTokenRecord: " + verificationToken);
         if (!verificationToken) {
             return { status: 400, message: "Invalid or expired token"};
         }
+        if(!userDetails) {
+            return { status: 400, message: "Invalid or expired token"}; 
+        }
+        if(userDetails.email_verified) {
+            return { status: 409, message: "User Already Verified"};
+        }
         if (verificationToken.expires_at < new Date()) {
             return { status: 410, message: "Invalid or expired token"};
         }
+        
         const updateUser = await User.update({ email_verified: true }, { where: { id: verificationToken.user_id } });
         if (updateUser) {
             logger.info(`Service Call: Save User, Status: Completed`);
