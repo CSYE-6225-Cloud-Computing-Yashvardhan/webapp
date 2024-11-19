@@ -129,9 +129,9 @@ jobs:
             -var "db_name=${{ secrets.DB_NAME }}" \
             ./packer/aws.pkr.hcl | tee packer_output.log
 
-            ami_id=$(grep -oP 'ami-\w+' packer_output.log | tail -n 1)
-            echo "AMI ID: $ami_id"
-            echo "::set-output name=ami_id::$ami_id"
+            ami_id=$(grep -oP 'ami-[0-9a-f]+' packer_output.log | tail -n 1)
+            echo "Extracted AMI_ID: $ami_id"
+            echo "AMI_ID=${ami_id}" >> $GITHUB_ENV
 
       - name: Configure AWS Credentials (Demo Account)
         uses: aws-actions/configure-aws-credentials@v4
@@ -140,18 +140,35 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_DEMO_SECRET_ACCESS_KEY }}
           aws-region: ${{ vars.AWS_REGION }}
 
+      - name: Fetch Launch Template ID
+        run: |
+            echo "Fetching Launch Template ID..."
+            export LAUNCH_TEMPLATE_ID=$(aws ec2 describe-launch-templates \
+              --filters "Name=launch-template-name,Values=csye6225_asg" \
+              --query "LaunchTemplates[0].LaunchTemplateId" \
+              --output text)
+            if [[ -z "$LAUNCH_TEMPLATE_ID" || "$LAUNCH_TEMPLATE_ID" == "None" ]]; then
+              echo "Error: Launch Template ID not found!"
+              exit 1
+            fi
+            echo "Fetched Launch Template ID: $LAUNCH_TEMPLATE_ID"
+            echo "LAUNCH_TEMPLATE_ID=${LAUNCH_TEMPLATE_ID}" >> $GITHUB_ENV
+        shell: bash
+        env:
+          AWS_REGION: us-east-1
+
       - name: Update Launch Template
         id: update_template
         run: |
             LATEST_VERSION=$(aws ec2 describe-launch-templates \
-              --launch-template-id ${{ vars.LAUNCH_TEMPLATE_ID }} \
+              --launch-template-id ${{ env.LAUNCH_TEMPLATE_ID }} \
               --query "LaunchTemplates[0].LatestVersionNumber" --output text)
             aws ec2 create-launch-template-version \
-              --launch-template-id ${{ vars.LAUNCH_TEMPLATE_ID }} \
+              --launch-template-id ${{ env.LAUNCH_TEMPLATE_ID }} \
               --source-version $LATEST_VERSION \
-              --launch-template-data '{"ImageId": "'"${{ steps.build.outputs.ami_id }}"'"}'
+              --launch-template-data '{"ImageId": "'"${{ env.AMI_ID }}"'"}'
             aws ec2 modify-launch-template \
-              --launch-template-id ${{ vars.LAUNCH_TEMPLATE_ID }} \
+              --launch-template-id ${{ env.LAUNCH_TEMPLATE_ID }} \
               --default-version $(( LATEST_VERSION + 1 ))
 
       - name: Start Instance Refresh
