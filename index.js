@@ -22,6 +22,7 @@ app.use((req, res, next) => {
 const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use('/healthz', healthzRoute);
+app.use('/cicd', healthzRoute);
 app.use('/v1/user', userRoute);
 app.use('/', (req, res) => {
     res.status(404).header('Cache-Control', 'no-cache').header('Pragma', 'no-cache').send();
